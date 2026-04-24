@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SISPAVE - Registro Nutricional</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 800px; margin: 2rem auto; padding: 1rem; }
+  .form-group { margin-bottom: 1rem; }
+  label { display: block; font-weight: bold; margin-top: 0.5rem; }
+  input, select, textarea { width: 100%; padding: 0.5rem; margin-top: 0.2rem; border: 1px solid #ccc; border-radius: 4px; }
+  .hidden { display: none; }
+  button { padding: 0.7rem 1.5rem; background: #2a7f62; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; margin-top: 1rem; }
+  button:hover { background: #1f5c48; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+  th, td { border: 1px solid #ddd; padding: 0.5rem; text-align: left; }
+  th { background: #f2f2f2; }
+  .result-box { background: #e8f5e9; padding: 1rem; margin-top: 2rem; border-radius: 5px; }
+  .menu-day { background: #f9f9f9; margin: 0.5rem 0; padding: 0.5rem; border-left: 4px solid #2a7f62; }
+  .compra-table th { background: #c8e6c9; }
+  ul { padding-left: 20px; margin: 2px 0; }
+</style>
+</head>
+<body>
+<h1>SISPAVE - Registro y Cálculo Nutricional</h1>
+<form id="registroForm">
+  <input type="hidden" id="autoId" value="">
+  <div class="form-group">
+    <label for="cedula">Número de identidad (opcional):</label>
+    <input type="text" id="cedula" placeholder="Cédula o pasaporte">
+  </div>
+  <div class="form-group">
+    <label for="nombre">Nombre *</label>
+    <input type="text" id="nombre" required>
+  </div>
+  <div class="form-group">
+    <label for="apellido">Apellido *</label>
+    <input type="text" id="apellido" required>
+  </div>
+  <div class="form-group">
+    <label for="sexo">Sexo *</label>
+    <select id="sexo" required>
+      <option value="">Seleccione...</option>
+      <option value="masculino">Masculino</option>
+      <option value="femenino">Femenino</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="fechaNac">Fecha de nacimiento *</label>
+    <input type="date" id="fechaNac" required>
+  </div>
+  <div class="form-group">
+    <label for="dieta">Tipo de dieta *</label>
+    <select id="dieta" required>
+      <option value="tradicional">Tradicional (incluye carnes, huevos, lácteos)</option>
+      <option value="vegetariana">Vegetariana (sin carne ni huevo, incluye lácteos)</option>
+      <option value="vegana">Vegana (solo vegetales, sin lácteos ni huevos)</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="peso">Peso actual (kg) *</label>
+    <input type="number" id="peso" step="0.1" min="1" max="300" required>
+  </div>
+  <div class="form-group">
+    <label for="talla">Estatura (cm) *</label>
+    <input type="number" id="talla" step="0.1" min="40" max="250" required>
+  </div>
+  <div class="form-group">
+    <label>¿Padece alguna enfermedad o patología? *</label>
+    <label><input type="radio" name="patologia" value="no" checked onchange="togglePatologia()"> No</label>
+    <label><input type="radio" name="patologia" value="si" onchange="togglePatologia()"> Sí</label>
+  </div>
+  <div id="patologiaDesc" class="form-group hidden">
+    <label for="descPatologia">Describa la patología:</label>
+    <textarea id="descPatologia" rows="3"></textarea>
+  </div>
+  <div class="form-group">
+    <label for="observaciones">Observaciones adicionales:</label>
+    <textarea id="observaciones" rows="3"></textarea>
+  </div>
+  <button type="submit">Calcular y Guardar</button>
+</form>
+
+<div id="resultado" class="hidden">
+  <h2>Resultado del Cálculo</h2>
+  <p><strong>ID de registro:</strong> <span id="idRegistro"></span></p>
+  <p><strong>Gasto Energético Basal (GEB):</strong> <span id="geb"></span> kcal/día</p>
+  <p><strong>Requerimiento Energético Total (GET):</strong> <span id="get"></span> kcal/día</p>
+  <h3>Macronutrientes diarios objetivo</h3>
+  <p id="macrosInfo"></p>
+
+  <h3>Menú Rotativo (28 días)</h3>
+  <div id="menuContainer"></div>
+
+  <h3>Lista de Compra Mensual (kilogramos)</h3>
+  <div id="compraContainer"></div>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7hQp0dzmSZ7Zpmv0q5ZtDVx7g76CRVNm_dgmoZDWdtGjdzp-MC-jQj8WvbNJpGwZe/exec";
+
+function togglePatologia() {
+  document.getElementById('patologiaDesc').classList.toggle('hidden',
+    document.querySelector('input[name="patologia"]:checked').value !== 'si');
+}
+
+document.getElementById('registroForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const datos = {
+    cedula: document.getElementById('cedula').value.trim(),
+    nombre: document.getElementById('nombre').value.trim(),
+    apellido: document.getElementById('apellido').value.trim(),
+    sexo: document.getElementById('sexo').value,
+    fechaNac: document.getElementById('fechaNac').value,
+    dieta: document.getElementById('dieta').value,
+    peso: document.getElementById('peso').value,
+    talla: document.getElementById('talla').value,
+    patologia: document.querySelector('input[name="patologia"]:checked').value,
+    descPatologia: document.getElementById('descPatologia').value.trim(),
+    observaciones: document.getElementById('observaciones').value.trim()
+  };
+
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos)
+  })
+  .then(response => {
+    console.log("Respuesta HTTP:", response.status, response.statusText);
+    if (!response.ok) {
+      throw new Error("Error HTTP " + response.status + ": " + response.statusText);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log("Datos recibidos:", data);
+    if (data.error) { alert("Error del script: " + data.error); return; }
+
+    document.getElementById('resultado').classList.remove('hidden');
+    document.getElementById('idRegistro').textContent = data.id;
+    document.getElementById('geb').textContent = data.geb;
+    document.getElementById('get').textContent = data.get;
+
+    document.getElementById('macrosInfo').innerHTML = `
+      Proteínas: ${data.macros.proteinas} &nbsp;|&nbsp;
+      Grasas: ${data.macros.grasas} &nbsp;|&nbsp;
+      Carbohidratos: ${data.macros.carbohidratos}
+    `;
+
+    const menuDiv = document.getElementById('menuContainer');
+    menuDiv.innerHTML = '';
+    data.menu.forEach(dia => {
+      let html = `<div class="menu-day"><strong>Día ${dia.dia}</strong><br>`;
+      ['desayuno','almuerzo','cena','merienda1','merienda2'].forEach(tipo => {
+        const c = dia[tipo];
+        if (!c) return;
+        html += `<em>${tipo.charAt(0).toUpperCase()+tipo.slice(1)}:</em> ${c.nombre} (${c.kcal} kcal)<br>`;
+        html += `<small>Proteínas: ${c.prot}g, Grasas: ${c.grasa}g, Carbohidratos: ${c.carb}g</small>`;
+        html += `<ul>`;
+        c.ingredientes.forEach(ing => html += `<li>${ing.alimento}: ${ing.gramos}g</li>`);
+        html += `</ul>`;
+      });
+      html += `</div>`;
+      menuDiv.innerHTML += html;
+    });
+
+    const compraDiv = document.getElementById('compraContainer');
+    if (data.compraMensual) {
+      let table = `<table class="compra-table"><tr><th>Alimento</th><th>Gramos totales</th><th>Kilogramos</th></tr>`;
+      for (let alimento in data.compraMensual) {
+        table += `<tr>
+          <td>${alimento}</td>
+          <td>${data.compraMensual[alimento].gramos_totales} g</td>
+          <td>${data.compraMensual[alimento].kilogramos} kg</td>
+        </tr>`;
+      }
+      table += `</table>`;
+      compraDiv.innerHTML = table;
+    } else {
+      compraDiv.innerHTML = "<p>No se pudo generar la lista de compra.</p>";
+    }
+  })
+  .catch(error => {
+    console.error("Error capturado:", error);
+    alert("Error de conexión: " + error.message + ". Mira la consola (F12) para más detalles.");
+  });
+});
+</script>
+</body>
+</html>
