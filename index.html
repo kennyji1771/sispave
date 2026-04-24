@@ -22,21 +22,25 @@
 </style>
 </head>
 <body>
-<h1>SISPAVE - Registro y Cálculo Nutricional</h1>
+<h1>SISPAVE - Registro y CÃ¡lculo Nutricional</h1>
 <form id="registroForm">
   <input type="hidden" id="autoId" value="">
+
   <div class="form-group">
-    <label for="cedula">Número de identidad (opcional):</label>
-    <input type="text" id="cedula" placeholder="Cédula o pasaporte">
+    <label for="cedula">NÃºmero de identidad (opcional):</label>
+    <input type="text" id="cedula" placeholder="CÃ©dula o pasaporte">
   </div>
+
   <div class="form-group">
     <label for="nombre">Nombre *</label>
     <input type="text" id="nombre" required>
   </div>
+
   <div class="form-group">
     <label for="apellido">Apellido *</label>
     <input type="text" id="apellido" required>
   </div>
+
   <div class="form-group">
     <label for="sexo">Sexo *</label>
     <select id="sexo" required>
@@ -45,51 +49,59 @@
       <option value="femenino">Femenino</option>
     </select>
   </div>
+
   <div class="form-group">
     <label for="fechaNac">Fecha de nacimiento *</label>
     <input type="date" id="fechaNac" required>
   </div>
+
   <div class="form-group">
     <label for="dieta">Tipo de dieta *</label>
     <select id="dieta" required>
-      <option value="tradicional">Tradicional (incluye carnes, huevos, lácteos)</option>
-      <option value="vegetariana">Vegetariana (sin carne ni huevo, incluye lácteos)</option>
-      <option value="vegana">Vegana (solo vegetales, sin lácteos ni huevos)</option>
+      <option value="tradicional">Tradicional (carnes, huevos, lÃ¡cteos)</option>
+      <option value="vegetariana">Vegetariana (sin carne ni huevo, incluye lÃ¡cteos)</option>
+      <option value="vegana">Vegana (solo vegetales, sin lÃ¡cteos ni huevos)</option>
     </select>
   </div>
+
   <div class="form-group">
     <label for="peso">Peso actual (kg) *</label>
     <input type="number" id="peso" step="0.1" min="1" max="300" required>
   </div>
+
   <div class="form-group">
     <label for="talla">Estatura (cm) *</label>
     <input type="number" id="talla" step="0.1" min="40" max="250" required>
   </div>
+
   <div class="form-group">
-    <label>¿Padece alguna enfermedad o patología? *</label>
+    <label>Â¿Padece alguna enfermedad o patologÃ­a? *</label>
     <label><input type="radio" name="patologia" value="no" checked onchange="togglePatologia()"> No</label>
-    <label><input type="radio" name="patologia" value="si" onchange="togglePatologia()"> Sí</label>
+    <label><input type="radio" name="patologia" value="si" onchange="togglePatologia()"> SÃ­</label>
   </div>
+
   <div id="patologiaDesc" class="form-group hidden">
-    <label for="descPatologia">Describa la patología:</label>
+    <label for="descPatologia">Describa la patologÃ­a:</label>
     <textarea id="descPatologia" rows="3"></textarea>
   </div>
+
   <div class="form-group">
     <label for="observaciones">Observaciones adicionales:</label>
     <textarea id="observaciones" rows="3"></textarea>
   </div>
+
   <button type="submit">Calcular y Guardar</button>
 </form>
 
 <div id="resultado" class="hidden">
-  <h2>Resultado del Cálculo</h2>
+  <h2>Resultado del CÃ¡lculo</h2>
   <p><strong>ID de registro:</strong> <span id="idRegistro"></span></p>
-  <p><strong>Gasto Energético Basal (GEB):</strong> <span id="geb"></span> kcal/día</p>
-  <p><strong>Requerimiento Energético Total (GET):</strong> <span id="get"></span> kcal/día</p>
+  <p><strong>Gasto EnergÃ©tico Basal (GEB):</strong> <span id="geb"></span> kcal/dÃ­a</p>
+  <p><strong>Requerimiento EnergÃ©tico Total (GET):</strong> <span id="get"></span> kcal/dÃ­a</p>
   <h3>Macronutrientes diarios objetivo</h3>
   <p id="macrosInfo"></p>
 
-  <h3>Menú Rotativo (28 días)</h3>
+  <h3>MenÃº Rotativo (28 dÃ­as)</h3>
   <div id="menuContainer"></div>
 
   <h3>Lista de Compra Mensual (kilogramos)</h3>
@@ -97,7 +109,7 @@
 </div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7hQp0dzmSZ7Zpmv0q5ZtDVx7g76CRVNm_dgmoZDWdtGjdzp-MC-jQj8WvbNJpGwZe/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzZKuKnjzqo2Q6Q444uc-7dT2dgYILy1HNdvJoiyIIsHIwfGJ5IZgbgDXFQb-lwsAKD/exec";
 
 function togglePatologia() {
   document.getElementById('patologiaDesc').classList.toggle('hidden',
@@ -124,18 +136,11 @@ document.getElementById('registroForm').addEventListener('submit', function(e) {
   fetch(SCRIPT_URL, {
     method: 'POST',
     mode: 'cors',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain' },  // â† evita preflight
     body: JSON.stringify(datos)
   })
-  .then(response => {
-    console.log("Respuesta HTTP:", response.status, response.statusText);
-    if (!response.ok) {
-      throw new Error("Error HTTP " + response.status + ": " + response.statusText);
-    }
-    return response.json();
-  })
+  .then(response => response.json())
   .then(data => {
-    console.log("Datos recibidos:", data);
     if (data.error) { alert("Error del script: " + data.error); return; }
 
     document.getElementById('resultado').classList.remove('hidden');
@@ -144,7 +149,7 @@ document.getElementById('registroForm').addEventListener('submit', function(e) {
     document.getElementById('get').textContent = data.get;
 
     document.getElementById('macrosInfo').innerHTML = `
-      Proteínas: ${data.macros.proteinas} &nbsp;|&nbsp;
+      ProteÃ­nas: ${data.macros.proteinas} &nbsp;|&nbsp;
       Grasas: ${data.macros.grasas} &nbsp;|&nbsp;
       Carbohidratos: ${data.macros.carbohidratos}
     `;
@@ -152,12 +157,12 @@ document.getElementById('registroForm').addEventListener('submit', function(e) {
     const menuDiv = document.getElementById('menuContainer');
     menuDiv.innerHTML = '';
     data.menu.forEach(dia => {
-      let html = `<div class="menu-day"><strong>Día ${dia.dia}</strong><br>`;
+      let html = `<div class="menu-day"><strong>DÃ­a ${dia.dia}</strong><br>`;
       ['desayuno','almuerzo','cena','merienda1','merienda2'].forEach(tipo => {
         const c = dia[tipo];
         if (!c) return;
         html += `<em>${tipo.charAt(0).toUpperCase()+tipo.slice(1)}:</em> ${c.nombre} (${c.kcal} kcal)<br>`;
-        html += `<small>Proteínas: ${c.prot}g, Grasas: ${c.grasa}g, Carbohidratos: ${c.carb}g</small>`;
+        html += `<small>ProteÃ­nas: ${c.prot}g, Grasas: ${c.grasa}g, Carbohidratos: ${c.carb}g</small>`;
         html += `<ul>`;
         c.ingredientes.forEach(ing => html += `<li>${ing.alimento}: ${ing.gramos}g</li>`);
         html += `</ul>`;
@@ -183,8 +188,8 @@ document.getElementById('registroForm').addEventListener('submit', function(e) {
     }
   })
   .catch(error => {
-    console.error("Error capturado:", error);
-    alert("Error de conexión: " + error.message + ". Mira la consola (F12) para más detalles.");
+    console.error("Error:", error);
+    alert("Error de conexiÃ³n. Mira la consola (F12).");
   });
 });
 </script>
